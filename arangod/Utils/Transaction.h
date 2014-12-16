@@ -103,6 +103,7 @@ namespace triagens {
             }
 
             this->setupTransaction();
+            pushOnStack(this);
           }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -110,6 +111,9 @@ namespace triagens {
 ////////////////////////////////////////////////////////////////////////////////
 
           virtual ~Transaction () {
+            TRI_ASSERT(getTopOfStack() == this);
+            popFromStack();
+
             if (_trx == nullptr) {
               return;
             }
