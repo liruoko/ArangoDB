@@ -49,6 +49,15 @@ thread_local int TransactionBase::_numberTrxInScope = 0;
 thread_local int TransactionBase::_numberTrxActive = 0;
 #endif
 
+////////////////////////////////////////////////////////////////////////////////
+/// @brief the following is for the runtime protection check, number of
+/// transaction objects in the current thread that are active (between
+/// begin and commit()/abort().
+////////////////////////////////////////////////////////////////////////////////
+
+thread_local Transaction::StackElement* Transaction::_stack = nullptr;
+
+
 // -----------------------------------------------------------------------------
 // --SECTION--                                                       END-OF-FILE
 // -----------------------------------------------------------------------------
