@@ -468,6 +468,7 @@ QueryResult Query::prepare (QueryRegistry* registry) {
     // create the transaction object, but do not start it yet
     auto trx = new triagens::arango::AqlTransaction(createTransactionContext(), _vocbase, _collections.collections(), _part == PART_MAIN);
     _trx = trx;   // Save the transaction in our object
+    triagens::arango::Transaction::push(trx);  // Push it onto the stack
 
     bool planRegisters;
 
@@ -1146,6 +1147,10 @@ void Query::cleanupPlanAndEngine (int errorCode) {
   }
 
   if (_trx != nullptr) {
+    triagens::arango::Transaction* tos 
+        = triagens::arango::Transaction::getTopOfStack();
+    TRI_ASSERT(tos == _trx);
+    triagens::arango::Transaction::popFromStack();
     // If the transaction was not committed, it is automatically aborted
     delete _trx;
     _trx = nullptr;
