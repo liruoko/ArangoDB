@@ -1448,7 +1448,7 @@ namespace triagens {
 
       public:
 
-        Transaction* getTopOfStack () {
+        static Transaction* getTopOfStack () {
           if (_stack == nullptr) {
             return nullptr;
           }
@@ -1457,12 +1457,12 @@ namespace triagens {
           }
         }
 
-        void pushOnStack (Transaction* t) {
+        static void pushOnStack (Transaction* t) {
           StackElement* s = new StackElement(t, _stack);
           _stack = s;
         }
 
-        Transaction* popFromStack () {
+        static Transaction* popFromStack () {
           if (_stack == nullptr) {
             return nullptr;
           }

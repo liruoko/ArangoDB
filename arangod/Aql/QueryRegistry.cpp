@@ -112,6 +112,9 @@ void QueryRegistry::insert (QueryId id,
   
     // Also, we need to count down the debugging counters for transactions:
     triagens::arango::TransactionBase::increaseNumbers(-1, -1);
+
+    // Take the transaction from the stack:
+    triagens::arango::Transaction::popFromStack();
   }
   else {
     THROW_ARANGO_EXCEPTION_MESSAGE(TRI_ERROR_INTERNAL,
@@ -146,6 +149,9 @@ Query* QueryRegistry::open (TRI_vocbase_t* vocbase,
   // We need to count up the debugging counters for transactions:
   triagens::arango::TransactionBase::increaseNumbers(1, 1);
 
+  // Put the transaction on the stack:
+  triagens::arango::Transaction::pushOnStack( qi->_query->trx() );
+
   return qi->_query;
 }
 
@@ -174,6 +180,9 @@ void QueryRegistry::close (TRI_vocbase_t* vocbase, QueryId id, double ttl) {
 
   // We need to count down the debugging counters for transactions:
   triagens::arango::TransactionBase::increaseNumbers(-1, -1);
+
+  // Take the transaction from the stack:
+  triagens::arango::Transaction::popFromStack();
 
   qi->_isOpen = false;
   qi->_expires = TRI_microtime() + qi->_timeToLive;
@@ -205,6 +214,8 @@ void QueryRegistry::destroy (std::string const& vocbase,
   if (! qi->_isOpen) {
     // We need to count up the debugging counters for transactions:
     triagens::arango::TransactionBase::increaseNumbers(1, 1);
+    // Put the transaction on the stack:
+    triagens::arango::Transaction::pushOnStack( qi->_query->trx() );
   }
 
   if (errorCode == TRI_ERROR_NO_ERROR) {

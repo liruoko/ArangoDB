@@ -194,6 +194,7 @@ ClusterCommResult* ClusterComm::asyncRequest (
     op->shardID = destination.substr(6);
     op->serverID = ClusterInfo::instance()->getResponsibleServer(op->shardID);
     LOG_DEBUG("Responsible server: %s", op->serverID.c_str());
+    (*headerFields)["X-Arango-Nolock"] = op->shardID;
   }
   else if (destination.substr(0,7) == "server:") {
     op->shardID = "";
@@ -280,6 +281,8 @@ ClusterCommResult* ClusterComm::syncRequest (
         map<string, string> const&         headerFields,
         ClusterCommTimeout                 timeout) {
 
+  map<string, string> headersCopy(headerFields);
+
   ClusterCommResult* res = new ClusterCommResult();
   res->clientTransactionID  = clientTransactionID;
   res->coordTransactionID   = coordTransactionID;
@@ -301,6 +304,7 @@ ClusterCommResult* ClusterComm::syncRequest (
       res->status = CL_COMM_ERROR;
       return res;
     }
+    headersCopy["X-Arango-Nolock"] = res->shardID;
   }
   else if (destination.substr(0, 7) == "server:") {
     res->shardID = "";
@@ -346,8 +350,7 @@ ClusterCommResult* ClusterComm::syncRequest (
                                 endTime - currentTime, false);
       client->keepConnectionOnDestruction(true);
 
-      map<string, string> headersCopy(headerFields);
-      headersCopy.emplace(make_pair(string("Authorization"), ServerState::instance()->getAuthentication()));
+      headersCopy["Authorization"] = ServerState::instance()->getAuthentication();
 #ifdef DEBUG_CLUSTER_COMM
 #ifdef TRI_ENABLE_MAINTAINER_MODE
 #if HAVE_BACKTRACE
