@@ -105,7 +105,8 @@ const string RestVocbaseBaseHandler::QUEUE_NAME = "STANDARD";
 RestVocbaseBaseHandler::RestVocbaseBaseHandler (HttpRequest* request)
   : RestBaseHandler(request),
     _context(static_cast<VocbaseContext*>(request->getRequestContext())),
-    _vocbase(_context->getVocbase()) {
+    _vocbase(_context->getVocbase()),
+    _fakeTrx(nullptr) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -654,6 +655,32 @@ int RestVocbaseBaseHandler::parseDocumentId (CollectionNameResolver const* resol
   key = TRI_DuplicateString2Z(TRI_CORE_MEM_ZONE, pos + 1, end - pos - 1);
 
   return TRI_ERROR_NO_ERROR;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// @brief prepareExecute, to react to X-Arango-Nolock header
+////////////////////////////////////////////////////////////////////////////////
+
+void RestVocbaseBaseHandler::prepareExecute () {
+  bool found;
+  char const* shardId = _request->header("x-arango-nolock", found);
+  if (found) {
+    _fakeTrx = new SingleCollectionReadOnlyTransaction(new StandaloneTransactionContext(), _vocbase, shardId);
+    _fakeTrx->addHint(TRI_TRANSACTION_HINT_LOCK_NEVER, true);
+    _fakeTrx->begin();
+    std::cout << "prepareExecute: Nolock header seen: " << shardId << std::endl;
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// @brief finalizeExecute, to react to X-Arango-Nolock header
+////////////////////////////////////////////////////////////////////////////////
+
+void RestVocbaseBaseHandler::finalizeExecute () {
+  if (_fakeTrx != nullptr) {
+    delete _fakeTrx;
+    std::cout << "finalizeExecute: Nolock header seen." << std::endl;
+  }
 }
 
 // -----------------------------------------------------------------------------
