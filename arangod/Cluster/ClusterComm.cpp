@@ -35,6 +35,7 @@
 #include "Basics/StringUtils.h"
 #include "SimpleHttpClient/ConnectionManager.h"
 #include "Dispatcher/DispatcherThread.h"
+#include "Utils/Transaction.h"
 
 #include "VocBase/server.h"
 
@@ -194,7 +195,12 @@ ClusterCommResult* ClusterComm::asyncRequest (
     op->shardID = destination.substr(6);
     op->serverID = ClusterInfo::instance()->getResponsibleServer(op->shardID);
     LOG_DEBUG("Responsible server: %s", op->serverID.c_str());
-    (*headerFields)["X-Arango-Nolock"] = op->shardID;
+    if (triagens::arango::Transaction::_makeNolockHeaders != nullptr) {
+      auto it = triagens::arango::Transaction::_makeNolockHeaders->find(op->shardID);
+      if (it != triagens::arango::Transaction::_makeNolockHeaders->end()) {
+        (*headerFields)["X-Arango-Nolock"] = op->shardID;
+      }
+    }
   }
   else if (destination.substr(0,7) == "server:") {
     op->shardID = "";
@@ -304,7 +310,12 @@ ClusterCommResult* ClusterComm::syncRequest (
       res->status = CL_COMM_ERROR;
       return res;
     }
-    headersCopy["X-Arango-Nolock"] = res->shardID;
+    if (triagens::arango::Transaction::_makeNolockHeaders != nullptr) {
+      auto it = triagens::arango::Transaction::_makeNolockHeaders->find(res->shardID);
+      if (it != triagens::arango::Transaction::_makeNolockHeaders->end()) {
+        headersCopy["X-Arango-Nolock"] = res->shardID;
+      }
+    }
   }
   else if (destination.substr(0, 7) == "server:") {
     res->shardID = "";

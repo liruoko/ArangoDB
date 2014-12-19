@@ -106,7 +106,7 @@ RestVocbaseBaseHandler::RestVocbaseBaseHandler (HttpRequest* request)
   : RestBaseHandler(request),
     _context(static_cast<VocbaseContext*>(request->getRequestContext())),
     _vocbase(_context->getVocbase()),
-    _fakeTrx(nullptr) {
+    _nolockHeaderSet(nullptr) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -665,9 +665,9 @@ void RestVocbaseBaseHandler::prepareExecute () {
   bool found;
   char const* shardId = _request->header("x-arango-nolock", found);
   if (found) {
-    _fakeTrx = new SingleCollectionReadOnlyTransaction(new StandaloneTransactionContext(), _vocbase, shardId);
-    _fakeTrx->addHint(TRI_TRANSACTION_HINT_LOCK_NEVER, true);
-    _fakeTrx->begin();
+    _nolockHeaderSet = new std::unordered_set<std::string>();
+    _nolockHeaderSet->insert(std::string(shardId));
+    triagens::arango::Transaction::_makeNolockHeaders = _nolockHeaderSet;
     std::cout << "prepareExecute: Nolock header seen: " << shardId << std::endl;
   }
 }
@@ -677,8 +677,10 @@ void RestVocbaseBaseHandler::prepareExecute () {
 ////////////////////////////////////////////////////////////////////////////////
 
 void RestVocbaseBaseHandler::finalizeExecute () {
-  if (_fakeTrx != nullptr) {
-    delete _fakeTrx;
+  if (_nolockHeaderSet != nullptr) {
+    triagens::arango::Transaction::_makeNolockHeaders = nullptr;
+    delete _nolockHeaderSet;
+    _nolockHeaderSet = nullptr;
     std::cout << "finalizeExecute: Nolock header seen." << std::endl;
   }
 }

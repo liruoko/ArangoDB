@@ -37,6 +37,7 @@
 #include "Utils/Exception.h"
 
 using namespace triagens::aql;
+using namespace triagens::arango;
 using Json = triagens::basics::Json;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -162,7 +163,9 @@ ExecutionEngine::ExecutionEngine (Query* query)
     _blocks(),
     _root(nullptr),
     _query(query),
-    _wasShutdown(false) {
+    _wasShutdown(false),
+    _previouslyLockedShards(nullptr),
+    _lockedShards(nullptr) {
 
   _blocks.reserve(8);
 }
@@ -181,6 +184,15 @@ ExecutionEngine::~ExecutionEngine () {
 
   for (auto it = _blocks.begin(); it != _blocks.end(); ++it) {
     delete (*it);
+  }
+
+  if (_lockedShards != nullptr) {
+    if (triagens::arango::Transaction::_makeNolockHeaders == _lockedShards) {
+      triagens::arango::Transaction::_makeNolockHeaders = _previouslyLockedShards;
+      delete _lockedShards;
+      _lockedShards = nullptr;
+      _previouslyLockedShards = nullptr;
+    }
   }
 }
 
@@ -926,6 +938,26 @@ ExecutionEngine* ExecutionEngine::instanciateFromPlan (QueryRegistry* queryRegis
       try {
         engine = inst.get()->buildEngines(); 
         root = engine->root();
+        // Now find all shards that take part:
+        if (Transaction::_makeNolockHeaders != nullptr) {
+          engine->_lockedShards = new std::unordered_set<std::string>(*Transaction::_makeNolockHeaders);
+          engine->_previouslyLockedShards = Transaction::_makeNolockHeaders;
+        }
+        else {
+          engine->_lockedShards = new std::unordered_set<std::string>();
+          engine->_previouslyLockedShards = nullptr;
+        }
+        for (auto& q : inst.get()->queryIds) {
+          std::string theId = q.first;
+          std::string queryId = q.second;
+          auto pos = theId.find('_');
+          if (pos != std::string::npos) {
+            // So this is a remote one on a DBserver:
+            std::string shardId = theId.substr(pos+1);
+            engine->_lockedShards->insert(shardId);
+          }
+        }
+        Transaction::_makeNolockHeaders = engine->_lockedShards;
       }
       catch (...) {
         // We need to destroy all queries that we have built and stuffed

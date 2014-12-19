@@ -103,7 +103,6 @@ namespace triagens {
             }
 
             this->setupTransaction();
-            pushOnStack(this);
           }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -111,9 +110,6 @@ namespace triagens {
 ////////////////////////////////////////////////////////////////////////////////
 
           virtual ~Transaction () {
-            TRI_ASSERT(getTopOfStack() == this);
-            popFromStack();
-
             if (_trx == nullptr) {
               return;
             }
@@ -1430,46 +1426,13 @@ namespace triagens {
 
         TransactionContext* _transactionContext;
 
-        struct StackElement {
-          Transaction*  elm;
-          StackElement* down;   // nullptr for bottom of stack
-          
-          StackElement (Transaction* t, 
-                        StackElement* d)
-            : elm(t), down(d) {
-          }
-
-          ~StackElement () {
-          }
-
-        };
-
-        static thread_local StackElement* _stack;
+////////////////////////////////////////////////////////////////////////////////
+/// @brief makeNolockHeaders
+////////////////////////////////////////////////////////////////////////////////
 
       public:
 
-        static Transaction* getTopOfStack () {
-          if (_stack == nullptr) {
-            return nullptr;
-          }
-          else {
-            return _stack->elm;
-          }
-        }
-
-        static void pushOnStack (Transaction* t) {
-          StackElement* s = new StackElement(t, _stack);
-          _stack = s;
-        }
-
-        static Transaction* popFromStack () {
-          if (_stack == nullptr) {
-            return nullptr;
-          }
-          Transaction* res = _stack->elm;
-          _stack = _stack->down;
-          return res;
-        }
+        static thread_local std::unordered_set<std::string>* _makeNolockHeaders;
 
     };
 

@@ -50,13 +50,12 @@ thread_local int TransactionBase::_numberTrxActive = 0;
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @brief the following is for the runtime protection check, number of
-/// transaction objects in the current thread that are active (between
-/// begin and commit()/abort().
+/// @brief if this pointer is set to an actual set, then for each request
+/// sent to a shardId using the ClusterComm library, an X-Arango-Nolock
+/// header is generated.
 ////////////////////////////////////////////////////////////////////////////////
 
-thread_local Transaction::StackElement* Transaction::_stack = nullptr;
-
+thread_local std::unordered_set<std::string>* Transaction::_makeNolockHeaders = nullptr;
 
 // -----------------------------------------------------------------------------
 // --SECTION--                                                       END-OF-FILE
