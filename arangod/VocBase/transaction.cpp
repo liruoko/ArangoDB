@@ -356,6 +356,7 @@ static int LockCollection (TRI_transaction_collection_t* trxCollection,
   TRI_ASSERT(! IsLocked(trxCollection));
 
   TRI_document_collection_t* document = trxCollection->_collection->_collection;
+  std::cout << "Locking collection " << document->_info._name << "\n";
 
   if (type == TRI_TRANSACTION_READ) {
     LOG_TRX(trx,
@@ -419,6 +420,8 @@ static int UnlockCollection (TRI_transaction_collection_t* trxCollection,
   TRI_ASSERT(IsLocked(trxCollection));
 
   TRI_document_collection_t* document = trxCollection->_collection->_collection;
+
+  std::cout << "Unlocking collection " << document->_info._name << "\n";
 
   if (trxCollection->_nestingLevel < nestingLevel) {
     // only process our own collections
