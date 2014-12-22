@@ -70,7 +70,7 @@ const std::string RestAqlHandler::QUEUE_NAME = "STANDARD";
 RestAqlHandler::RestAqlHandler (triagens::rest::HttpRequest* request,
                                 std::pair<ApplicationV8*, 
                                 QueryRegistry*>* pair)
-  : RestBaseHandler(request),
+  : RestVocbaseBaseHandler(request),
     _applicationV8(pair->first),
     _context(static_cast<VocbaseContext*>(request->getRequestContext())),
     _vocbase(_context->getVocbase()),
