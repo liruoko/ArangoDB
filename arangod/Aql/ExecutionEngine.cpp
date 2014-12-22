@@ -185,15 +185,6 @@ ExecutionEngine::~ExecutionEngine () {
   for (auto it = _blocks.begin(); it != _blocks.end(); ++it) {
     delete (*it);
   }
-
-  if (_lockedShards != nullptr) {
-    if (triagens::arango::Transaction::_makeNolockHeaders == _lockedShards) {
-      triagens::arango::Transaction::_makeNolockHeaders = _previouslyLockedShards;
-      delete _lockedShards;
-      _lockedShards = nullptr;
-      _previouslyLockedShards = nullptr;
-    }
-  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -133,6 +133,19 @@ namespace triagens {
 
         int shutdown (int errorCode) {
           if (_root != nullptr && ! _wasShutdown) {
+
+            // Take care of locking prevention measures in the cluster:
+            if (_lockedShards != nullptr) {
+              if (triagens::arango::Transaction::_makeNolockHeaders == 
+                  _lockedShards) {
+                triagens::arango::Transaction::_makeNolockHeaders 
+                    = _previouslyLockedShards;
+              }
+              delete _lockedShards;
+              _lockedShards = nullptr;
+              _previouslyLockedShards = nullptr;
+            }
+
             // prevent a duplicate shutdown
             int res = _root->shutdown(errorCode);
             _wasShutdown = true;
