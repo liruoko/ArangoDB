@@ -553,6 +553,7 @@ struct CoordinatorInstanciator : public WalkerWorker<ExecutionNode> {
                           "/_api/aql/instanciate");
 
     auto headers = new std::map<std::string, std::string>;
+    (*headers)["X-Arango-Nolock"] = shardId;   // Prevent locking
     auto res = cc->asyncRequest("", 
                                 coordTransactionID,
                                 "shard:" + shardId,  
