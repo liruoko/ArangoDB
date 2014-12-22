@@ -861,12 +861,10 @@ static int BeginRead (TRI_document_collection_t* document) {
     auto it = triagens::arango::Transaction::_makeNolockHeaders->find(collName);
     if (it != triagens::arango::Transaction::_makeNolockHeaders->end()) {
       // do not lock by command
-      std::cout << "BeginRead blocked " << document->_info._name << std::endl;
       return TRI_ERROR_NO_ERROR;
     }
   }
   TRI_READ_LOCK_DOCUMENTS_INDEXES_PRIMARY_COLLECTION(document);
-  std::cout << "BeginRead " << document->_info._name << std::endl;
 
   return TRI_ERROR_NO_ERROR;
 }
@@ -881,12 +879,10 @@ static int EndRead (TRI_document_collection_t* document) {
     auto it = triagens::arango::Transaction::_makeNolockHeaders->find(collName);
     if (it != triagens::arango::Transaction::_makeNolockHeaders->end()) {
       // do not lock by command
-      std::cout << "EndRead blocked " << document->_info._name << std::endl;
       return TRI_ERROR_NO_ERROR;
     }
   }
   TRI_READ_UNLOCK_DOCUMENTS_INDEXES_PRIMARY_COLLECTION(document);
-  std::cout << "EndRead " << document->_info._name << std::endl;
 
   return TRI_ERROR_NO_ERROR;
 }
@@ -901,12 +897,10 @@ static int BeginWrite (TRI_document_collection_t* document) {
     auto it = triagens::arango::Transaction::_makeNolockHeaders->find(collName);
     if (it != triagens::arango::Transaction::_makeNolockHeaders->end()) {
       // do not lock by command
-      std::cout << "BeginWrite blocked " << document->_info._name << std::endl;
       return TRI_ERROR_NO_ERROR;
     }
   }
   TRI_WRITE_LOCK_DOCUMENTS_INDEXES_PRIMARY_COLLECTION(document);
-  std::cout << "BeginWrite " << document->_info._name << std::endl;
 
   return TRI_ERROR_NO_ERROR;
 }
@@ -921,12 +915,10 @@ static int EndWrite (TRI_document_collection_t* document) {
     auto it = triagens::arango::Transaction::_makeNolockHeaders->find(collName);
     if (it != triagens::arango::Transaction::_makeNolockHeaders->end()) {
       // do not lock by command
-      std::cout << "EndWrite blocked " << document->_info._name << std::endl;
       return TRI_ERROR_NO_ERROR;
     }
   }
   TRI_WRITE_UNLOCK_DOCUMENTS_INDEXES_PRIMARY_COLLECTION(document);
-  std::cout << "EndWrite " << document->_info._name << std::endl;
 
   return TRI_ERROR_NO_ERROR;
 }

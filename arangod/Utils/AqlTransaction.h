@@ -196,8 +196,6 @@ namespace triagens {
             TRI_transaction_collection_t* trxCollection 
               = static_cast<TRI_transaction_collection_t*>
                            (TRI_AtVectorPointer(&trx->_collections, i));
-            std::cout << "LATE LOCK: " 
-              << trxCollection->_collection->_collection->_info._name << " \n";
             int res = TRI_UnlockCollectionTransaction(trxCollection, 
                                          trxCollection->_accessType, 0);
             if (res != TRI_ERROR_NO_ERROR) {

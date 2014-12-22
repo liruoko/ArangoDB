@@ -668,7 +668,6 @@ void RestVocbaseBaseHandler::prepareExecute () {
     _nolockHeaderSet = new std::unordered_set<std::string>();
     _nolockHeaderSet->insert(std::string(shardId));
     triagens::arango::Transaction::_makeNolockHeaders = _nolockHeaderSet;
-    std::cout << "prepareExecute: Nolock header seen: " << shardId << std::endl;
   }
 }
 
@@ -681,7 +680,6 @@ void RestVocbaseBaseHandler::finalizeExecute () {
     triagens::arango::Transaction::_makeNolockHeaders = nullptr;
     delete _nolockHeaderSet;
     _nolockHeaderSet = nullptr;
-    std::cout << "finalizeExecute: Nolock header seen." << std::endl;
   }
 }
 
